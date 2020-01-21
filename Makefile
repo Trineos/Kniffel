@@ -5,8 +5,8 @@ LDFLAGS = -lm -lws2_32
 
 all: server.exe client.exe
 
-%.o:%.c communication.h
+%.o:%.c %.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-%.exe: %.o communication.o
+%.exe: %.o communication.o kniffel.o
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)

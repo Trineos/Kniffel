@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include "communication.h"
+#include "kniffel.h"
 
 void gamesetup (int* n_players,
                 int* n_computer,
@@ -47,7 +48,6 @@ int connect_to_clients (struct sockaddr_in* client_add,
 
 }
 
-
 int extract_action (char* m)
 {
     return (int) *m - '0';
@@ -67,7 +67,6 @@ void answer_to_action (int action,
 }
 
 // Aktionen, die der Client zum Server sendet, der Server muss darauf antworten
-void wuerfel ();
 void get_table ();
 
 
@@ -85,6 +84,10 @@ int main ()
     struct sockaddr_in server;
     if (make_server_socket(PORT, &server_socket, &server) != 0)
         return -1;
+
+
+    srand(time(NULL));
+
 
     int n_players = 0;
     int n_computer = 0;
@@ -116,11 +119,12 @@ int main ()
     
     // TODO: GAME LOGIK
 
-    
-
     // receive messages from clients:
     int read_size;
     char client_message [2000];
+
+    int dice [5] = {0, 0, 0, 0, 0};
+    int b [5] = {TRUE, TRUE, TRUE, TRUE, TRUE};
 
     while( (read_size = recv (client_socket [0], client_message , 2000 , 0)) > 0 )
     {
@@ -129,6 +133,16 @@ int main ()
         printf (client_message);
         printf (" ");
         int action =  extract_action (client_message);
+        switch (action)
+        {
+        case 1:
+            wuerfel (dice, b, 0);
+            printwuerfel(dice, 5);
+            break;
+        
+        default:
+            break;
+        }
         answer_to_action (action, client_socket[0]);
 
         memset (client_message, 0, sizeof(client_message));
