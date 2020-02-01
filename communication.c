@@ -1,5 +1,15 @@
 #include "communication.h"
 
+int send_to (int socket, char* m, int size_of_m)
+{
+    if( send(socket, m, size_of_m , 0) < 0)
+    {
+        puts("send error");
+        return -1;
+    }
+    return 0;
+}
+
 int initialize_winsocket (WSADATA* wsaData)
 {
     int iResult = WSAStartup (MAKEWORD (2,2), wsaData);

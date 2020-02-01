@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include "communication.h"
 #include "kniffel.h"
+#include <string.h>
+#include <time.h>
 
 void gamesetup (int* n_players,
                 int* n_computer,
@@ -54,24 +56,6 @@ int extract_action (char* m)
     
 }
 
-void answer_to_action (int action,
-                       int client_socket)
-{
-    switch (action)
-    {
-        case 1: printf("send Aktion 1 to %d\n", client_socket); break;
-        case 2: printf("send Aktion 2 to %d\n", client_socket); break;
-        default: printf("ungueltige Eingabe\n"); break;
-    }
-    return;
-}
-
-// Aktionen, die der Client zum Server sendet, der Server muss darauf antworten
-void get_table ();
-
-
-
-
 int main ()
 {
     // Initialize Winsock
@@ -95,21 +79,14 @@ int main ()
     gamesetup (&n_players, &n_computer, &n_client);
 
     struct sockaddr_in* client_add = (struct sockaddr_in*) malloc (n_client * sizeof (struct sockaddr_in));
-    if (client_add == NULL)
-    {
-        printf ("client_add failed");
-    }
     int* client_socket = (int *) malloc (n_client * sizeof (int));
+    
+    if (client_add == NULL)
+        printf ("client_add failed");
     if (client_socket == NULL)
-    {
         printf ("client_socket failed");
-    }
-
     if (connect_to_clients(client_add, client_socket, n_client, server_socket) != 0)
-    {
         printf ("connection to clients failed");
-        return -1;
-    }
 
     for (int i = 0; i < n_client; i++)
     {
@@ -118,33 +95,48 @@ int main ()
 
     
     // TODO: GAME LOGIK
-
-    // receive messages from clients:
-    int read_size;
-    char client_message [2000];
-
     int dice [5] = {0, 0, 0, 0, 0};
     int b [5] = {TRUE, TRUE, TRUE, TRUE, TRUE};
 
-    while( (read_size = recv (client_socket [0], client_message , 2000 , 0)) > 0 )
+    int read_size;
+    char client_message [1000];
+    char server_message [1000];
+    memset (server_message, 0, sizeof (server_message));
+    memset (client_message, 0, sizeof(client_message));
+    
+    // communication: first server sends message to client, after that, the client responds
+    strcpy (server_message, "Auswahl: 1) Wuerfeln, 2) Tabelle 3) Anleitung");
+    if (send_to (client_socket [0], server_message, strlen (server_message)))
+        return -1;
+
+    // now the communication between the server and the currently active client starts
+    while( (read_size = recv (client_socket [0], client_message , 1000 , 0)) > 0 )
     {
-        extract_action (client_message);
-        printf ("message: ");
         printf (client_message);
-        printf (" ");
         int action =  extract_action (client_message);
         switch (action)
         {
-        case 1:
+        case 1: // Spieler möchte würfeln
             wuerfel (dice, b, 0);
-            printwuerfel(dice, 5);
+            sprintf (server_message, "%d %d %d %d %d", dice [0], dice [1], dice [2], dice [3], dice [4]);
             break;
-        
-        default:
-            break;
-        }
-        answer_to_action (action, client_socket[0]);
 
+        case 2: // Spieler möchte die Tabelle sehen
+            sprintf (server_message, "          | Spieler 1 | Spieler 2 \n1er       | %9d | %9d\n2er       | %9d | %9d", 1,2,3,4);
+            break;
+
+        case 3: // Spieler möchte die Tabelle sehen
+            strcpy (server_message, " 3 mal Moeglichkeit zu wuerfeln, man kann Wuerfel rausnehmen, im Anschluss auswaehlen");
+            break;
+        default:
+        break;
+        }
+
+        send_to (client_socket [0], server_message, sizeof (server_message));
+
+
+        // resets buffer client_message and server_message
+        memset (server_message, 0, sizeof (server_message));
         memset (client_message, 0, sizeof(client_message));
     }
 

@@ -9,6 +9,8 @@
 #ifndef _COMMUNICATION_H_
 #define _COMMUNICATION_H_
 
+int send_to (int socket, char* m, int size_of_m);
+
 
 int make_server_socket (int port,
                         int* server_sock,

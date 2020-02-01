@@ -15,19 +15,21 @@ int main(){
         return -1;
 
 
-    // sending messages to the server
-    char message[1000];
+    // receive send_mess from server and then send answer to the server
+    char send_mess [1000];
+    char rec_mess [1000];
+    
     while(1)
     {
-        printf("write your message : ");
-        gets(message);
+        // receive data
+        recv (client_socket, rec_mess , 2000 , 0);
+        printf(rec_mess);
+        printf("\n\n Auswahl: ");
+        gets(send_mess);
 
         //Send some data
-        if( send(client_socket , message , strlen(message) , 0) < 0)
-        {
-            puts("send error");
-            return 1;
-        }
+        if (send_to (client_socket, send_mess, strlen(send_mess)) < 0)
+            return -1;
     }
 
     // close client socket
